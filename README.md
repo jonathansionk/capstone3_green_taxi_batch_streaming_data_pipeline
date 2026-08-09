@@ -23,130 +23,38 @@ Data batch April–Mei 2026 dimuat dari GCS ke BigQuery. Data streaming dikirim 
 ```mermaid
 flowchart LR
 
-    %% =====================================================
-    %% DATA SOURCES
-    %% =====================================================
-    subgraph SOURCES["Data Sources"]
-        direction TB
+    PUBLISHER["Python Publisher"]
+    PUBSUB["Google Pub/Sub"]
+    DATAFLOW["Google Dataflow"]
 
-        WEBSITE["NYC Taxi Data Website"]
-        GCS["Google Cloud Storage<br/>Raw Batch April & Mei"]
-        PUBLISHER["Python Publisher<br/>Simulasi Data Streaming"]
+    PUBLISHER -->|Streaming Events| PUBSUB
+    PUBSUB --> DATAFLOW
 
-        WEBSITE -->|Download dan upload| GCS
-    end
-
-    %% =====================================================
-    %% STREAMING PIPELINE
-    %% =====================================================
-    subgraph STREAMING["Streaming Pipeline"]
+    subgraph AIRFLOW["Apache Airflow"]
         direction LR
 
-        PUBSUB["Google Pub/Sub<br/>Message Broker"]
-        DATAFLOW["Google Dataflow<br/>Validation & Processing"]
-    end
+        GCS["Google Cloud Storage<br/>Raw Batch Data"]
 
-    %% =====================================================
-    %% BIGQUERY DATA LAYERS
-    %% =====================================================
-    subgraph BIGQUERY["Google BigQuery"]
-        direction LR
-
-        subgraph STAGING_LAYER["Staging Layer"]
-            STG_BATCH["Batch Staging<br/>April & Mei"]
-            STG_STREAM["Streaming Staging<br/>Valid Events"]
-            REJECTED["Rejected Stream Events<br/>Invalid Events"]
-            STG_ZONE["Taxi Zone Staging"]
+        subgraph STAGING["Staging Layer"]
+            BQ_STAGING["BigQuery<br/>Staging Tables"]
         end
 
-        subgraph SILVER_LAYER["Silver / Intermediate Layer"]
-            BATCH_CLEAN["Batch Clean"]
-            STREAM_CLEAN["Stream Clean"]
-            TAXI_ZONE["Taxi Zone Clean"]
-            GREEN_CLEAN["Green Taxi Clean<br/>Batch + Stream"]
+        subgraph SILVER["Silver / Intermediate Layer"]
+            BQ_SILVER["BigQuery<br/>Clean Tables"]
         end
 
-        subgraph GOLD_LAYER["Gold / Data Mart Layer"]
-            DAILY["Daily Trip Summary"]
-            PAYMENT["Payment Summary"]
-            ZONE["Zone Performance"]
+        subgraph GOLD["Gold / Data Mart Layer"]
+            BQ_GOLD["BigQuery<br/>Analytical Views"]
         end
+
+        GCS -->|Batch Load| BQ_STAGING
+        BQ_STAGING -->|Clean dan Transform| BQ_SILVER
+        BQ_SILVER -->|Aggregate| BQ_GOLD
     end
 
-    %% =====================================================
-    %% AIRFLOW ORCHESTRATION
-    %% =====================================================
-    subgraph AIRFLOW["Apache Airflow — Orchestration"]
-        direction TB
-
-        BOOTSTRAP_DAG["Streaming Bootstrap DAG<br/>Create Dataset & Stream Tables"]
-
-        END_TO_END_DAG["End-to-End DAG<br/>Load Batch, Transform & Quality Check"]
-    end
-
-    %% =====================================================
-    %% STREAMING DATA FLOW
-    %% =====================================================
-    PUBLISHER -->|Publish Events| PUBSUB
-    PUBSUB -->|Consume Messages| DATAFLOW
-
-    DATAFLOW -->|Valid Events| STG_STREAM
-    DATAFLOW -->|Invalid Events| REJECTED
-
-    %% =====================================================
-    %% BATCH DATA FLOW
-    %% =====================================================
-    GCS -->|Parquet Files| STG_BATCH
-    GCS -->|CSV Taxi Zone| STG_ZONE
-
-    %% =====================================================
-    %% STAGING TO SILVER
-    %% =====================================================
-    STG_BATCH -->|Clean & Validate| BATCH_CLEAN
-    STG_STREAM -->|Clean & Standardize| STREAM_CLEAN
-    STG_ZONE -->|Standardize| TAXI_ZONE
-
-    BATCH_CLEAN --> GREEN_CLEAN
-    STREAM_CLEAN --> GREEN_CLEAN
-    TAXI_ZONE -->|Enrich Zone Data| GREEN_CLEAN
-
-    %% =====================================================
-    %% SILVER TO GOLD
-    %% =====================================================
-    GREEN_CLEAN -->|Daily Aggregation| DAILY
-    GREEN_CLEAN -->|Payment Aggregation| PAYMENT
-    GREEN_CLEAN -->|Zone Aggregation| ZONE
-
-    %% =====================================================
-    %% AIRFLOW CONTROL FLOW
-    %% =====================================================
-    BOOTSTRAP_DAG -. Create staging dataset and tables .-> STG_STREAM
-    BOOTSTRAP_DAG -. Create rejected table .-> REJECTED
-
-    END_TO_END_DAG -. Load batch data .-> STG_BATCH
-    END_TO_END_DAG -. Load taxi zone .-> STG_ZONE
-    END_TO_END_DAG -. Run transformations .-> GREEN_CLEAN
-    END_TO_END_DAG -. Create views and quality checks .-> GOLD_LAYER
-
-    %% =====================================================
-    %% STYLING
-    %% =====================================================
-    classDef source fill:#FFF3CD,stroke:#B8860B,color:#222
-    classDef streaming fill:#D6EAF8,stroke:#2874A6,color:#222
-    classDef staging fill:#E8F8F5,stroke:#148F77,color:#222
-    classDef silver fill:#EBEDEF,stroke:#5D6D7E,color:#222
-    classDef gold fill:#FCF3CF,stroke:#B7950B,color:#222
-    classDef airflow fill:#F5EEF8,stroke:#7D3C98,color:#222
-    classDef rejected fill:#FADBD8,stroke:#C0392B,color:#222
-
-    class WEBSITE,GCS,PUBLISHER source
-    class PUBSUB,DATAFLOW streaming
-    class STG_BATCH,STG_STREAM,STG_ZONE staging
-    class BATCH_CLEAN,STREAM_CLEAN,TAXI_ZONE,GREEN_CLEAN silver
-    class DAILY,PAYMENT,ZONE gold
-    class BOOTSTRAP_DAG,END_TO_END_DAG airflow
-    class REJECTED rejected
+    DATAFLOW -->|Valid dan Rejected Events| BQ_STAGING
 ```
+
 
 ## 3. Cara Menjalankan Program
 
@@ -407,12 +315,12 @@ Gold Layer digunakan untuk analisis dan reporting.
 ## Ringkasan Flow Demo
 
 ```text
-1. Trigger DAG streaming bootstrap
+1. Trigger DAG jcdeah_009_jonathan_streaming
 2. Jalankan Dataflow
 3. Jalankan Publisher
 4. Periksa data valid dan rejected
 5. Drain Dataflow
-6. Trigger DAG end-to-end
+6. Trigger DAG jcdeah_009_jonathan_green_taxi_end_to_end
 7. Periksa Silver Layer
 8. Periksa Gold Mart
 9. Jalankan query analytics
