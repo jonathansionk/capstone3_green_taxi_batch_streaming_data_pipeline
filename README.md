@@ -23,20 +23,36 @@ Data batch April–Mei 2026 dimuat dari GCS ke BigQuery. Data streaming dikirim 
 ```mermaid
 flowchart TB
 
+    %% Alur streaming di bagian atas
     subgraph STREAMING[" "]
         direction LR
-        PUBLISHER["Publisher"] --> PUBSUB["Pub/Sub"] --> DATAFLOW["Dataflow"]
+
+        PUBLISHER["Publisher"]
+        PUBSUB["Pub/Sub"]
+        DATAFLOW["Dataflow"]
+
+        PUBLISHER --> PUBSUB
+        PUBSUB --> DATAFLOW
     end
 
+    %% Alur batch dan transformasi di dalam Airflow
     subgraph AIRFLOW["Airflow"]
         direction LR
-        GCS["GCS / Website"] --> STAGING["BigQuery Staging"]
-        STAGING --> SILVER["BigQuery Silver Transform"]
-        SILVER --> GOLD["BigQuery Gold Mart"]
+
+        GCS["GCS / Website"]
+        STAGING["BigQuery Staging"]
+        SILVER["BigQuery Silver Transform"]
+        GOLD["BigQuery Gold Mart"]
+
+        GCS --> STAGING
+        STAGING --> SILVER
+        SILVER --> GOLD
     end
 
-    DATAFLOW --> STAGING
+    %% Dataflow mengirimkan data streaming ke BigQuery Staging
+    DATAFLOW -->|Streaming Data| STAGING
 
+    %% Menyembunyikan kotak pembungkus bagian streaming
     style STREAMING fill:transparent,stroke:transparent
 ```
 
