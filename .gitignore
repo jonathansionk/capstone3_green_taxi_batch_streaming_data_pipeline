@@ -1,0 +1,53 @@
+# ===============================
+# ENVIRONMENT CONFIGURATION
+# ===============================
+.env
+.env.local
+.env.development
+.env.production
+
+# .env.example tetap masuk GitHub
+!.env.example
+
+# ===============================
+# CREDENTIALS
+# ===============================
+credentials/
+keys/
+service-account*.json
+*service_account*.json
+gcp-key*.json
+credentials*.json
+application_default_credentials.json
+
+# ===============================
+# PYTHON VIRTUAL ENVIRONMENT
+# ===============================
+.venv/
+venv/
+env/
+.venv-streaming/
+
+
+# ===============================
+# AIRFLOW GENERATED FILES
+# ===============================
+logs/
+airflow.db
+airflow-webserver.pid
+config/airflow.cfg
+
+# ===============================
+# LOCAL DATA
+# ===============================
+data/
+*.parquet
+*.csv
+
+# ===============================
+# TEMPORARY FILES
+# ===============================
+tmp/
+temp/
+*.log
+

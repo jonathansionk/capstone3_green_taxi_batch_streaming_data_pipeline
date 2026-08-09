@@ -1,0 +1,13 @@
+setup.py
+jcdeah_009_green_taxi_streaming.egg-info/PKG-INFO
+jcdeah_009_green_taxi_streaming.egg-info/SOURCES.txt
+jcdeah_009_green_taxi_streaming.egg-info/dependency_links.txt
+jcdeah_009_green_taxi_streaming.egg-info/requires.txt
+jcdeah_009_green_taxi_streaming.egg-info/top_level.txt
+streaming/__init__.py
+streaming/pipeline.py
+streaming/pipeline_backup.py
+streaming/publisher.py
+streaming/publisher_backup.py
+streaming/schemas.py
+streaming/schemas_backup.py
