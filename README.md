@@ -23,27 +23,36 @@ Data batch April–Mei 2026 dimuat dari GCS ke BigQuery. Data streaming dikirim 
 ```mermaid
 flowchart LR
 
-    PUBLISHER["Publisher"]
-    PUBSUB["Pub/Sub"]
-    DATAFLOW["Dataflow"]
+    PUBLISHER["Python Publisher"]
+    PUBSUB["Google Pub/Sub"]
+    DATAFLOW["Google Dataflow"]
 
-    PUBLISHER --> PUBSUB
+    PUBLISHER -->|Streaming Events| PUBSUB
     PUBSUB --> DATAFLOW
 
-    subgraph AIRFLOW["Airflow"]
+    subgraph AIRFLOW["Apache Airflow"]
         direction LR
 
-        GCS["GCS / Website"]
-        STAGING["BigQuery<br/>Staging"]
-        SILVER["BigQuery<br/>Silver Transform"]
-        GOLD["BigQuery<br/>Gold Mart"]
+        GCS["Google Cloud Storage<br/>Raw Batch Data"]
 
-        GCS --> STAGING
-        STAGING --> SILVER
-        SILVER --> GOLD
+        subgraph STAGING["Staging Layer"]
+            BQ_STAGING["BigQuery<br/>Staging Tables"]
+        end
+
+        subgraph SILVER["Silver / Intermediate Layer"]
+            BQ_SILVER["BigQuery<br/>Clean Tables"]
+        end
+
+        subgraph GOLD["Gold / Data Mart Layer"]
+            BQ_GOLD["BigQuery<br/>Analytical Views"]
+        end
+
+        GCS -->|Batch Load| BQ_STAGING
+        BQ_STAGING -->|Clean dan Transform| BQ_SILVER
+        BQ_SILVER -->|Aggregate| BQ_GOLD
     end
 
-    DATAFLOW --> STAGING
+    DATAFLOW -->|Valid dan Rejected Events| BQ_STAGING
 ```
 
 
