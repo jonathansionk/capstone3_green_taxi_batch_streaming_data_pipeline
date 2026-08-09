@@ -14,7 +14,7 @@ Project ini bertujuan untuk membangun pipeline data **batch dan streaming** untu
 - Docker Compose
 - Python dan SQL
 
-Data batch April–Mei 2026 dimuat dari GCS ke BigQuery. Data streaming dikirim melalui Publisher ke Pub/Sub, diproses oleh Dataflow, lalu disimpan ke BigQuery. Airflow digunakan untuk membuat dataset, memuat data batch, melakukan transformasi Silver, membangun Gold Mart, dan menjalankan quality check.
+Data batch April–Mei 2026 dimuat dari GCS ke BigQuery. Data streaming bulan Juni-Juli 2026 dikirim melalui Publisher ke Pub/Sub, diproses oleh Dataflow, lalu disimpan ke BigQuery. Jumlah data streaming yang digenerate oleh publisher sebanyak 7.816 baris atau setara dengan ± 10% dari jumlah data yang ada di tabel green_taxi_clean di dataset silver. Airflow digunakan untuk membuat dataset, memuat data batch, melakukan transformasi Silver, membuat view Gold Mart, dan menjalankan quality data check.
 
 ---
 
